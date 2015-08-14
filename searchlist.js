@@ -2,6 +2,13 @@ $.fn.searchlist = function (option) {
   return this.each(function() {
     el = this;
     $.getJSON( option["source"], function( data ) {
+
+      // bring data into context
+      $.each(option["context"].split("."), function(i, contextpath) {
+        data = data[contextpath];
+      });
+
+      // iterate over data, create list elements
       $.each(data, function(i, datael) {
 
         // clone prototype element to new one
@@ -22,3 +29,7 @@ $.fn.searchlist = function (option) {
     }); // end ajax request
   }); // end searchlist element loop
 }; // end prototype
+
+$(document).ready(function() {
+  $("<style type='text/css'>.sl-prototype-element {display: none}</style>").appendTo("head");
+});
