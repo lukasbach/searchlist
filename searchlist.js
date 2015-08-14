@@ -18,11 +18,19 @@ $.fn.searchlist = function (option) {
           .addClass("sl-element")
           .appendTo(el);
 
-        // Fill with data content
+        // fill with data content
         $listel
           .find("[data-value]")
           .each(function() {
-            $(this).html(datael[$(this).attr("data-value")]);
+            listelValue = datael;
+
+            // in case of sub elements, go through json objects to target element
+            $.each($(this).attr("data-value").split("."), function(i, valuepath) {
+              listelValue = listelValue[valuepath];
+            });
+
+            // feed value into html
+            $(this).html(listelValue);
           });
 
       }); // end data loop
