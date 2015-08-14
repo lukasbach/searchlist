@@ -1,3 +1,12 @@
+/*
+ *    Allowed options:
+ *      "source": Path to the json file that's being used for the list
+ *        e.g. "path/to/file.json"
+ *      "context": JSON path to the list
+ *        e.g. "json.list.path
+ *        for the list {json:{list:{path:[listel,listlel,listel]}}}
+ */
+
 $.fn.searchlist = function (option) {
   return this.each(function() {
     el = this;
