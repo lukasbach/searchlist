@@ -292,7 +292,12 @@ function createElementDom(el, datael, prototypeelement) {
       });
 
       // feed value into html
-      $(this).html(listelValue);
+      if($(this).is("[data-putvalue]") || $(this).attr("data-putvalue") == "html") {
+        console.log("hello");
+        $(this).attr($(this).attr("data-putvalue"), listelValue);
+      } else {
+        $(this).html(listelValue);
+      }
     });
 
   // transform events
