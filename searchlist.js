@@ -31,7 +31,7 @@ function initialize(option, el) {
     $.each(data, function(i, datael) {
 
       // create one elements dom and put it into the lists dom
-      createElementDom(el, datael).appendTo(el);
+      createElementDom(el, datael, $(el).find(".sl-prototype-element")).appendTo(el);
 
     }); // end data loop
   }); // end ajax request
@@ -163,7 +163,7 @@ function search(option, el) {
  *        e.g. "value" or 3 or true or {do:"something",and:"somethingelse"}
  */
 function injectElement(option, el) {
-  createElementDom(el, option["value"]).appendTo(el);
+  createElementDom(el, option["value"], $(el).find(".sl-prototype-element")).appendTo(el);
 }
 
 
@@ -187,13 +187,32 @@ function removeElement(option, el) {
 
 
 
+/*  function transformElement    
+ *
+ *    Allowed options:
+ *      "transformedElement"
+ *      "transformPrototype"
+ */
+function transformElement(option, el) {
+  previousElement = $(option["transformedElement"]).prev();
+  elementdata = jQuery.parseJSON($(option["transformedElement"]).attr("data-elementdata"));
+  $(option["transformedElement"]).remove();
+  createElementDom(el, elementdata, option["transformPrototype"])
+    .removeAttr("id")
+    .insertAfter(previousElement);
+}
+
+
+
 // PRIVATE
-function createElementDom(el, datael) {
+function createElementDom(el, datael, prototypeelement) {
   // clone prototype element to new one
-  var $listel = $(el).find(".sl-prototype-element")
+  var $listel = $(prototypeelement)
     .clone()
     .removeClass("sl-prototype-element")
-    .addClass("sl-element");
+    .removeClass("sl-prototype-transform-element")
+    .addClass("sl-element")
+    .attr("data-elementdata", JSON.stringify(datael));
 
   // fill with data content
   $listel
@@ -210,12 +229,19 @@ function createElementDom(el, datael) {
       $(this).html(listelValue);
     });
 
+  // transform events
+  $listel.find("[data-transform]").click(function() {
+    console.log("hello");
+    //$(el).searchlist("transformElement", {transformedElement:$listel,transformPrototype:$(el).find("#" + $(this).attr("data-transform"))});
+    transformElement({transformedElement:$listel,transformPrototype:$(el).find("#" + $(this).attr("data-transform"))}, el)
+  });
+
   return $listel;
 }
 
 
 $(document).ready(function() {
-  $("<style type='text/css'>.sl-prototype-element {display: none}</style>").appendTo("head");
+  $("<style type='text/css'>.sl-prototype-element, .sl-prototype-transform-element {display: none}</style>").appendTo("head");
 });
 
 //$(".searchlist).injectElement({value:{"country_id":"LOL","country_name":"LOLLAND"}});
