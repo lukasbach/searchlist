@@ -80,50 +80,48 @@ function search(option, el) {
           });
         });
 
-      // mark found/not found elements with class
-      if(matches != 0) {
-        if($(this).hasClass("searchFound")) {
-          $(this).addClass("previouslyFound");
-        }
-        $(this).addClass("searchFound").removeClass("searchNotFound").removeClass(".searchPreviouslyNotFound");
-      } else {
-        if($(this).hasClass("searchNotFound")) {
-          $(this).addClass("previouslyNotFound");
-        }
-        $(this).addClass("searchNotFound").removeClass("searchFound").removeClass("previouslyFound");
+      // mark/unmark previously found elements
+      if($(this).hasClass("searchFound")) {
+        $(this).removeClass("searchPreviouslyNotFound");
+      }
+      else if($(this).hasClass("searchNotFound")) {
+        $(this).addClass("searchPreviouslyNotFound");
       }
 
-      $(this).find(".searchFound.searchPreviouslyFound").removeClass(".searchPreviouslyFound");
-      $(this).find(".searchNotFound.searchPreviouslyNotFound").removeClass(".searchPreviouslyNotFound");
+      // mark found/not found elements with class
+      if(matches != 0) {
+        $(this).addClass("searchFound").removeClass("searchNotFound");
+      } else {
+        $(this).addClass("searchNotFound").removeClass("searchFound");
+      }
+  
+      // animation code
+      if(option["animate"] == "true" && option["hideUnrelevants"] == "true") {
+
+        // fade previously hidden, but now found elements in
+        if($(this).hasClass("searchFound") && $(this).hasClass("searchPreviouslyNotFound")) {
+            console.log("hello");
+            var autoHeight = $(this).css('height', 'auto').height();
+            $(this).height(0).animate({height: autoHeight, opacity: 1}, 500, function() {
+              $(this).removeAttr("style");
+            });
+        }
+
+        // fade previously shown, but now not the search keywords matching elements out
+        if($(this).hasClass("searchNotFound") && !$(this).hasClass("searchPreviouslyNotFound")) {
+          $(this).animate({height: 0, opacity: 0}, 500, function() {
+            $(this).removeAttr("style");
+            $(this).css("display", "none");
+          });
+        }
+        
+      } // end animation code
+
     });
 
   // always show found search elements
   $(el).find(".sl-element.searchFound").css("display", "block");
 
-  // animation code
-  if(option["animate"] == "true" && option["hideUnrelevants"] == "true") {
-
-    // iterate over listelements and apply new heights
-    $(".searchlist .sl-element.searchFound.previouslyNotFound").each(function() {
-      console.log($(this).css('height', 'auto').height() + "px");
-        var curHeight = $(this).height(),
-            autoHeight = $(this).css('height', 'auto').height();
-        $(this).height(curHeight).animate({height: autoHeight, opacity: 0}, 500, function() {
-          $(this).removeAttr("style");
-        });
-    })
-
-
-        /*$(".searchlist .searchFound.previouslyNotFound").animate({height: "auto", opacity: 1}, 500, function() {
-          $(this).removeAttr("style");
-        });*/
-        $(".searchlist .sl-element.searchNotFound:not(.previouslyFound)").animate({height: 0, opacity: 0}, 500, function() {
-          $(this).removeAttr("style");
-          $(this).css("display", "none");
-        });
-
-    // reset prevouslyfound/ previouslyNotFound markers
-  } // end animation code
 
   // hide wrong elements (fallback in case animation is turned off)
   if(option["animate"] != "true") {
