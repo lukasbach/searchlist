@@ -292,8 +292,7 @@ function createElementDom(el, datael, prototypeelement) {
       });
 
       // feed value into html
-      if($(this).is("[data-putvalue]") || $(this).attr("data-putvalue") == "html") {
-        console.log("hello");
+      if($(this).is("[data-putvalue]") && $(this).attr("data-putvalue") != "html") {
         $(this).attr($(this).attr("data-putvalue"), listelValue);
       } else {
         $(this).html(listelValue);
@@ -309,9 +308,90 @@ function createElementDom(el, datael, prototypeelement) {
     }, el);
   });
 
+  // other events
+  $listel.find("[data-event]").click(function() {
+    if($(this).attr("data-event") == "applychanges") {
+      console.log(getDataFromElement($listel));
+      createElementDom(el, getDataFromElement($listel), $(el).find(".sl-prototype-element[data-elementtype='default']"))
+        .insertAfter($listel);
+      $listel.remove();
+    }
+  });
+
   return $listel;
 }
 
+// PRIVATE
+function getDataFromElement(element) {
+  obj = {};
+  $(element)
+    .find("[data-value]")
+    .each(function( ){
+    var $el = $(this), 
+        name = $(this).attr("data-value"), 
+        key, k, i, o, val
+    ;
+
+    key = name;
+
+    //val = $el.val() || '';
+
+    // read data into object
+    if($(this).is("[data-putvalue]") && $(this).attr("data-putvalue") != "html" && $(this).attr("data-putvalue") != "value") {
+      val = $(this).attr($(this).attr("data-putvalue"));
+    } else if($(this).attr("data-putvalue") == "value") {
+      val = $(this).val();
+    } else {
+      val = $(this).html();
+    }
+
+
+    k = key.split('.'); o = obj;
+    while ( k.length )
+    {
+        i = k.shift( );
+        if ( k.length ) 
+        {
+            if ( !o.hasOwnProperty( i ) ) o[ i ] = /^\d+$/.test( k[0] ) ? [ ] : { };
+            o = o[ i ];
+        }
+        else 
+        {
+            o[ i ] = val;
+        }
+    }
+  });
+
+  return obj;
+}
+/*function ggetDataFromElement(element) {
+  obj = {};
+  $(element)
+    .find("[data-value]")
+    .each(function() {
+      // create object node
+      valueObj = {};
+      currentValueObj = valueObj;
+      $.each($(this).attr("data-value").split("."), function(i, objpath) {
+        currentValueObj[objpath] = {};
+        currentValueObj = currentValueObj[objpath];
+      });
+
+      // read data into object
+      if($(this).is("[data-putvalue]") && $(this).attr("data-putvalue") != "html") {
+        currentValueObj = $(this).attr($(this).attr("data-putvalue"));
+      } else {
+        currentValueObj = $(this).html();
+      }
+
+      console.log(currentValueObj);
+
+      // combine with previous gathered data
+      obj = $.extend(true, {}, obj, valueObj);
+    });
+
+  return obj;
+}*/
 
 $(document).ready(function() {
   $("<style type='text/css'>.sl-prototype-element, .sl-prototype-transform-element {display: none}</style>").appendTo("head");
