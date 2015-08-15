@@ -151,12 +151,12 @@ function search(option, el) {
 
 
 
-/*  function search    
+/*  function injectElement    
  *
  *    Allowed options:
  *      "key": Can be either the key in case the list is an object or the position
  *        number where the element should be inserted; False if the element should
- *        be inserted at the end of the list
+ *        be inserted at the end of the list // TODO
  *        e.g. 3 or "hello" or false
  *      "value": The element thats being inserted; Can be any valid variable, like
  *        String, Integer or Object
@@ -165,6 +165,26 @@ function search(option, el) {
 function injectElement(option, el) {
   createElementDom(el, option["value"]).appendTo(el);
 }
+
+
+
+/*  function removeElement    
+ *
+ *    Allowed options:
+ *      "key": Can be either the key in case the list is an object or the position
+ *        number where the element being removed is // TODO
+ *        e.g. 3 or "hello"
+ *      "element": Alternativly you can hand a element as argument, which will
+          be removed
+ */
+function removeElement(option, el) {
+  if("key" in option) {
+    $(el).find(".sl-element:not(.sl-prototype-element):nth-child(" + String( option["key"] + 1 ) + ")").remove();
+  } else if("element" in option) {
+    $(option["element"]).remove();
+  }
+}
+
 
 
 // PRIVATE
@@ -180,11 +200,9 @@ function createElementDom(el, datael) {
     .find("[data-value]")
     .each(function() {
       listelValue = datael;
-      console.log(datael);
 
       // in case of sub elements, go through json objects to target element
       $.each($(this).attr("data-value").split("."), function(i, valuepath) {
-        console.log(valuepath);
         listelValue = listelValue[valuepath];
       });
 
