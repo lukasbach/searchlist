@@ -100,7 +100,6 @@ function search(option, el) {
 
         // fade previously hidden, but now found elements in
         if($(this).hasClass("searchFound") && $(this).hasClass("searchPreviouslyNotFound")) {
-            console.log("hello");
             var autoHeight = $(this).css('height', 'auto').height();
             $(this).height(0).animate({height: autoHeight, opacity: 1}, 500, function() {
               $(this).removeAttr("style");
@@ -188,6 +187,53 @@ function transformElement(option, el) {
 
 
 
+/*  function sortList    
+ *
+ *    Allowed options:
+ *      "sortkey"
+ *      "direction"; either asc or desc
+ */
+function sortList(option, el) {
+  // create array from sortkeys
+  var sortarray = []
+  $(el).find(".sl-element").each(function(i) {
+    $(this).attr("data-index", i);
+    sortarray.push({
+      index: i, 
+      value: $(this).find("[data-value='" + option["sortkey"] + "']").html(),
+      element: $(this).addClass("unsorted")
+    });
+  });
+
+  // sort array
+  sortarray.sort(function(a, b) {
+    if(typeof a.value == "string") {
+      var aName = a.value.toLowerCase();
+      var bName = b.value.toLowerCase(); 
+      if(option["direction"] == "desc") 
+        return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
+      else 
+        return ((aName > bName) ? -1 : ((aName < bName) ? 1 : 0));
+    }
+  });
+
+  // apply sorting to dom
+  $.each(sortarray, function(i, sortelement) {
+    sortelement["element"]
+      .clone()
+      .removeClass("unsorted")
+      .appendTo($(el));
+  });
+
+  // remove old temporary elements
+  $(el).find(".sl-element.unsorted").remove();
+
+  console.log(sortarray);
+
+}
+
+
+
 // PRIVATE
 function createElementDom(el, datael, prototypeelement) {
   // clone prototype element to new one
@@ -215,7 +261,6 @@ function createElementDom(el, datael, prototypeelement) {
 
   // transform events
   $listel.find("[data-transform]").click(function() {
-    console.log("hello");
     //$(el).searchlist("transformElement", {transformedElement:$listel,transformPrototype:$(el).find("#" + $(this).attr("data-transform"))});
     transformElement({transformedElement:$listel,transformPrototype:$(el).find("#" + $(this).attr("data-transform"))}, el)
   });
