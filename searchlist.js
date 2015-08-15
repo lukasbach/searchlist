@@ -60,19 +60,22 @@ function initialize(option, el) {
  */
 function search(option, el) {
   var defaults = {
-    "keywords": option["keywords"] || "",
-    "hideUnrelevants": option["hideUnrelevants"] || "true",
-    "caseSensitive": option["caseSensitive"] || "false"
+    "keywords": "",
+    "hideUnrelevants": "true",
+    "caseSensitive": "false",
+    "animate": "wrong"
   }
 
   var option = $.extend({}, defaults, option);
 
+  if(option["animate"] == "true") {
+    $(el).css("position", "relative");
+  }
+
   $el = $(el)
     .find(".sl-element")
-    .removeClass("searchFound")
-    .removeClass("searchNotFound")
     .each(function() {
-      matches = 0;
+      var matches = 0;
 
       $(this)
         .find("[data-value]")
@@ -86,21 +89,74 @@ function search(option, el) {
           });
         });
 
+      // mark found/not found elements with class
       if(matches != 0) {
-        $(this).addClass("searchFound");
+        if($(this).hasClass("searchFound")) {
+          $(this).addClass("previouslyFound");
+        }
+        $(this).addClass("searchFound").removeClass("searchNotFound");
       } else {
-        $(this).addClass("searchNotFound");
+        $(this).addClass("searchNotFound").removeClass("searchFound").removeClass("previouslyFound");
       }
     });
 
+  // always show found search elements
   $(el).find(".sl-element.searchFound").css("display", "block");
 
-  if(option["hideUnrelevants"] == "true") {
-    $(el).find(".sl-element.searchNotFound").css("display", "none");
-  } else {
-    $(el).find(".sl-element.searchNotFound").css("display", "block");
+  // animation code
+  if(option["animate"] == "true" && option["hideUnrelevants"] == "true") {
+    // fade new search results in
+    $(el).find(".sl-element.searchFound:not(.previouslyFound)").fadeIn(500);
+
+    var offsetCount = 0;
+
+    // iterate over listelements and temp save positioning
+    $(el).find(".sl-element").each(function() {
+      // old offset and width
+      $(this).attr("data-defaultOffset", $($(this)[0]).offset().top);
+      $(this).attr("data-defaultWidth", $($(this)[0]).outerWidth());
+
+      if($(this).hasClass("searchFound")) {
+        // new offset
+        $(this).attr("data-newOffset", offsetCount);
+        offsetCount += $(this).outerHeight();
+      }
+    });
+
+    // iterate over listelements and apply old positioning as absolute position;
+    // then animate into new position
+    $(el).find(".sl-element").each(function() {
+      $(this).css("position", "absolute");
+      $(this).css("top", String($(this).attr("data-defaultOffset")) + "px"); // - $(el).offset.top
+      $(this).css("width", String($(this).attr("data-defaultWidth")) + "px");
+
+      if($(this).hasClass("searchFound")) {
+        // animate new position
+        $(this).animate({top: $(this).attr("data-newOffset")}, 500, function() {
+          $(this).removeAttr("style");
+        });
+      } else {
+        // fade wrong elements out
+        $(this).fadeOut(500, function() {
+          $(this).removeAttr("style");
+          $(this).css("display", "none");
+        });
+      }
+    });
+
+    // now hide wrong elements completely
+    $(".sl-element.searchNotFound").css("display", "none");
+  } // end animation code
+
+  // hide wrong elements (fallback in case animation is turned off)
+  if(option["animate"] != "true") {
+    if(option["hideUnrelevants"] == "true") {
+      $(el).find(".sl-element.searchNotFound").css("display", "none");
+    } else {
+      $(el).find(".sl-element.searchNotFound").css("display", "block");
+    }
   }
-}
+} // end search function
 
 $(document).ready(function() {
   $("<style type='text/css'>.sl-prototype-element {display: none}</style>").appendTo("head");
