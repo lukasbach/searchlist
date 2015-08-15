@@ -7,45 +7,48 @@
  *        for the list {json:{list:{path:[listel,listlel,listel]}}}
  */
 
-$.fn.searchlist = function (option) {
+$.fn.searchlist = function (functionname, option) {
   return this.each(function() {
-    el = this;
-    $.getJSON( option["source"], function( data ) {
+    return window[functionname](option, this);
+  });
+}; // end prototype
 
-      // bring data into context
-      $.each(option["context"].split("."), function(i, contextpath) {
-        data = data[contextpath];
-      });
+function initialize(option, el) {
+  $.getJSON( option["source"], function( data ) {
 
-      // iterate over data, create list elements
-      $.each(data, function(i, datael) {
+    // bring data into context
+    $.each(option["context"].split("."), function(i, contextpath) {
+      data = data[contextpath];
+    });
 
-        // clone prototype element to new one
-        $listel = $(el).find(".sl-prototype-element")
-          .clone()
-          .removeClass("sl-prototype-element")
-          .addClass("sl-element")
-          .appendTo(el);
+    // iterate over data, create list elements
+    $.each(data, function(i, datael) {
 
-        // fill with data content
-        $listel
-          .find("[data-value]")
-          .each(function() {
-            listelValue = datael;
+      // clone prototype element to new one
+      $listel = $(el).find(".sl-prototype-element")
+        .clone()
+        .removeClass("sl-prototype-element")
+        .addClass("sl-element")
+        .appendTo(el);
 
-            // in case of sub elements, go through json objects to target element
-            $.each($(this).attr("data-value").split("."), function(i, valuepath) {
-              listelValue = listelValue[valuepath];
-            });
+      // fill with data content
+      $listel
+        .find("[data-value]")
+        .each(function() {
+          listelValue = datael;
 
-            // feed value into html
-            $(this).html(listelValue);
+          // in case of sub elements, go through json objects to target element
+          $.each($(this).attr("data-value").split("."), function(i, valuepath) {
+            listelValue = listelValue[valuepath];
           });
 
-      }); // end data loop
-    }); // end ajax request
-  }); // end searchlist element loop
-}; // end prototype
+          // feed value into html
+          $(this).html(listelValue);
+        });
+
+    }); // end data loop
+  }); // end ajax request
+} // end init function
 
 $(document).ready(function() {
   $("<style type='text/css'>.sl-prototype-element {display: none}</style>").appendTo("head");
