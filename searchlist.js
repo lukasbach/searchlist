@@ -262,7 +262,10 @@ function createElementDom(el, datael, prototypeelement) {
   // transform events
   $listel.find("[data-transform]").click(function() {
     //$(el).searchlist("transformElement", {transformedElement:$listel,transformPrototype:$(el).find("#" + $(this).attr("data-transform"))});
-    transformElement({transformedElement:$listel,transformPrototype:$(el).find("#" + $(this).attr("data-transform"))}, el)
+    transformElement({
+      transformedElement:$listel,
+      transformPrototype:$(el).find(".sl-prototype-element[data-elementtype='" + $(this).attr("data-transform") + "']")
+    }, el);
   });
 
   return $listel;
