@@ -85,10 +85,16 @@ function search(option, el) {
         if($(this).hasClass("searchFound")) {
           $(this).addClass("previouslyFound");
         }
-        $(this).addClass("searchFound").removeClass("searchNotFound");
+        $(this).addClass("searchFound").removeClass("searchNotFound").removeClass(".searchPreviouslyNotFound");
       } else {
+        if($(this).hasClass("searchNotFound")) {
+          $(this).addClass("previouslyNotFound");
+        }
         $(this).addClass("searchNotFound").removeClass("searchFound").removeClass("previouslyFound");
       }
+
+      $(this).find(".searchFound.searchPreviouslyFound").removeClass(".searchPreviouslyFound");
+      $(this).find(".searchNotFound.searchPreviouslyNotFound").removeClass(".searchPreviouslyNotFound");
     });
 
   // always show found search elements
@@ -96,47 +102,27 @@ function search(option, el) {
 
   // animation code
   if(option["animate"] == "true" && option["hideUnrelevants"] == "true") {
-    // fade new search results in
-    $(el).find(".sl-element.searchFound:not(.previouslyFound)").fadeIn(500);
 
-    var offsetCount = 0;
-
-    // iterate over listelements and temp save positioning
-    $(el).find(".sl-element").each(function() {
-      // old offset and width
-      $(this).attr("data-defaultOffset", $($(this)[0]).offset().top);
-      $(this).attr("data-defaultWidth", $($(this)[0]).outerWidth(true));
-
-      if($(this).hasClass("searchFound")) {
-        // new offset
-        $(this).attr("data-newOffset", offsetCount);
-        offsetCount += $(this).outerHeight(true);
-      }
-    });
-
-    // iterate over listelements and apply old positioning as absolute position;
-    // then animate into new position
-    $(el).find(".sl-element").each(function() {
-      $(this).css("position", "absolute");
-      $(this).css("top", String($(this).attr("data-defaultOffset") - $(el).offset().top) + "px"); // - $(el).offset.top
-      $(this).css("width", String($(this).attr("data-defaultWidth")) + "px");
-
-      if($(this).hasClass("searchFound")) {
-        // animate new position
-        $(this).animate({top: $(this).attr("data-newOffset")}, 500, function() {
+    // iterate over listelements and apply new heights
+    $(".searchlist .sl-element.searchFound.previouslyNotFound").each(function() {
+      console.log($(this).css('height', 'auto').height() + "px");
+        var curHeight = $(this).height(),
+            autoHeight = $(this).css('height', 'auto').height();
+        $(this).height(curHeight).animate({height: autoHeight, opacity: 0}, 500, function() {
           $(this).removeAttr("style");
         });
-      } else {
-        // fade wrong elements out
-        $(this).fadeOut(500, function() {
+    })
+
+
+        /*$(".searchlist .searchFound.previouslyNotFound").animate({height: "auto", opacity: 1}, 500, function() {
+          $(this).removeAttr("style");
+        });*/
+        $(".searchlist .sl-element.searchNotFound:not(.previouslyFound)").animate({height: 0, opacity: 0}, 500, function() {
           $(this).removeAttr("style");
           $(this).css("display", "none");
         });
-      }
-    });
 
-    // now hide wrong elements completely
-    $(".sl-element.searchNotFound").css("display", "none");
+    // reset prevouslyfound/ previouslyNotFound markers
   } // end animation code
 
   // hide wrong elements (fallback in case animation is turned off)
