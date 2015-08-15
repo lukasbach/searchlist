@@ -181,7 +181,7 @@ function removeElement(option, el) {
  *      "data": New data, that will overwrite the old data; Note that missing elements
  *        will use the old data, so not every piece of data must be in this argument
  */
-function modify(option, el) {
+function modifyElement(option, el) {
   // get specified element
   if("key" in option) {
     var element = $(el).find(".sl-element:not(.sl-prototype-element):nth-child(" + String( option["key"] + 1 ) + ")");
