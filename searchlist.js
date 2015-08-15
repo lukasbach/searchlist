@@ -31,7 +31,7 @@ function initialize(option, el) {
     $.each(data, function(i, datael) {
 
       // create one elements dom and put it into the lists dom
-      createElementDom(el, datael, $(el).find(".sl-prototype-element")).appendTo(el);
+      createElementDom(el, datael, $(el).find(".sl-prototype-element[data-elementtype='default']")).appendTo(el);
 
     }); // end data loop
   }); // end ajax request
@@ -146,7 +146,7 @@ function search(option, el) {
  *        e.g. "value" or 3 or true or {do:"something",and:"somethingelse"}
  */
 function injectElement(option, el) {
-  createElementDom(el, option["value"], $(el).find(".sl-prototype-element")).appendTo(el);
+  createElementDom(el, option["value"], $(el).find(".sl-prototype-element[data-elementtype='default']")).appendTo(el);
 }
 
 
@@ -181,7 +181,6 @@ function transformElement(option, el) {
   elementdata = jQuery.parseJSON($(option["transformedElement"]).attr("data-elementdata"));
   $(option["transformedElement"]).remove();
   createElementDom(el, elementdata, option["transformPrototype"])
-    .removeAttr("id")
     .insertAfter(previousElement);
 }
 
@@ -214,22 +213,23 @@ function sortList(option, el) {
         return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
       else 
         return ((aName > bName) ? -1 : ((aName < bName) ? 1 : 0));
-    }
+    } // TODO
   });
 
   // apply sorting to dom
   $.each(sortarray, function(i, sortelement) {
-    sortelement["element"]
+    // recreate element
+    elementdata = jQuery.parseJSON($(sortelement["element"]).attr("data-elementdata"));
+    createElementDom(el, elementdata, $(el).find(".sl-prototype-element[data-elementtype='" +  $(sortelement["element"]).attr("data-elementtype") + "']"))
+      .appendTo($(el));
+    /*sortelement["element"]
       .clone()
       .removeClass("unsorted")
-      .appendTo($(el));
+      .appendTo($(el));*/
   });
 
   // remove old temporary elements
   $(el).find(".sl-element.unsorted").remove();
-
-  console.log(sortarray);
-
 }
 
 
@@ -272,5 +272,3 @@ function createElementDom(el, datael, prototypeelement) {
 $(document).ready(function() {
   $("<style type='text/css'>.sl-prototype-element, .sl-prototype-transform-element {display: none}</style>").appendTo("head");
 });
-
-//$(".searchlist).injectElement({value:{"country_id":"LOL","country_name":"LOLLAND"}});
