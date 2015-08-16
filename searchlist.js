@@ -288,7 +288,26 @@ function sortList(option, el) {
  *      "sortdirection"; either asc or desc
  */
 function groupList(option, el) {
+  var groups = [];
 
+  // iterate over elements to sort them into their groups
+  $(el).find(".sl-element").each(function(){
+    // get group name
+    var groupname = getValueFromJson($(this).attr("data-elementdata"), option["groupkey"]);
+
+    console.log(groups);
+
+    // create group if not yet existing
+    if(!(groups.indexOf(groupname) >= 0)) {
+      groups.push(groupname);
+      $("<div class='sl-group'></div>")
+        .attr("data-groupname", groupname)
+        .appendTo($(el));
+    }
+
+    // push elements into their corresponding groups
+    $(this).appendTo($(el).find(".sl-group[data-groupname='" + groupname + "']"))
+  });
 }
 
 
@@ -510,6 +529,21 @@ function sortElements(elements, sortkey, direction, el) {
 
   return obj;
 }*/
+
+// PRIVATE
+function getValueFromObject(obj, key) {
+  listelValue = obj;
+
+  // in case of sub elements, go through json objects to target element
+  $.each(key.split("."), function(i, valuepath) {
+    listelValue = listelValue[valuepath];
+  });
+
+  return listelValue;
+}
+function getValueFromJson(json, key) {
+  return getValueFromObject($.parseJSON(json), key);
+}
 
 $(document).ready(function() {
   $("<style type='text/css'>.sl-prototype-element, .sl-prototype-transform-element {display: none}</style>").appendTo("head");
