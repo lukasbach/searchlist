@@ -270,6 +270,48 @@ function sortList(option, el) {
 
 
 
+/*  function moveUp    
+ *
+ *    Allowed options:
+ *      "key": Can be either the key in case the list is an object or the position
+ *        number where the element being moved is // TODO
+ *        e.g. 3 or "hello"
+ *      "element": Alternativly you can hand a element as argument, which will
+          be moved
+ */
+function moveUp(option, el) {
+  if("key" in option) {
+    element = $(el).find(".sl-element:not(.sl-prototype-element):nth-child(" + String( option["key"] + 1 ) + ")");
+  } else if("element" in option) {
+    element = $(option["element"]);
+  }
+
+  element.insertBefore(element.prev(".sl-element:not(.sl-prototype-element)"));
+}
+
+
+
+/*  function moveDown    
+ *
+ *    Allowed options:
+ *      "key": Can be either the key in case the list is an object or the position
+ *        number where the element being moved is // TODO
+ *        e.g. 3 or "hello"
+ *      "element": Alternativly you can hand a element as argument, which will
+          be moved
+ */
+function moveDown(option, el) {
+  if("key" in option) {
+    element = $(el).find(".sl-element:not(.sl-prototype-element):nth-child(" + String( option["key"] + 1 ) + ")");
+  } else if("element" in option) {
+    element = $(option["element"]);
+  }
+
+  element.insertAfter(element.next(".sl-element:not(.sl-prototype-element)"));
+}
+
+
+
 // PRIVATE
 function createElementDom(el, datael, prototypeelement) {
   // clone prototype element to new one
@@ -310,11 +352,25 @@ function createElementDom(el, datael, prototypeelement) {
 
   // other events
   $listel.find("[data-event]").click(function() {
+    // EVENT apply changes
+    //  looks through the element for changed values and applies them on the list
     if($(this).attr("data-event") == "applychanges") {
-      console.log(getDataFromElement($listel));
       createElementDom(el, getDataFromElement($listel), $(el).find(".sl-prototype-element[data-elementtype='default']"))
         .insertAfter($listel);
       $listel.remove();
+    }
+    // EVENT removeElement
+    //  removes the current element
+    else if($(this).attr("data-event") == "removeElement") {
+      $listel.remove();
+    }
+    // EVENT moveUp
+    else if($(this).attr("data-event") == "moveUp") {
+      moveUp({element: $listel}, el);
+    }
+    // EVENT moveDown
+    else if($(this).attr("data-event") == "moveDown") {
+      moveDown({element: $listel}, el);
     }
   });
 
