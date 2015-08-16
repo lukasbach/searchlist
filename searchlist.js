@@ -312,6 +312,24 @@ function groupList(option, el) {
 
 
 
+/*  function groupList    
+ *
+ *    Allowed options: none
+ */
+function unGroup(option, el) {
+  // replace all list elements in groups back to main element
+  $(el)
+    .find(".sl-group .sl-element")
+    .appendTo(el);
+
+  // Remove all (now empty) group elements
+  $(el)
+    .find(".sl-group")
+    .remove();
+}
+
+
+
 
 /*  function moveUp    
  *
