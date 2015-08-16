@@ -229,8 +229,19 @@ function transformElement(option, el) {
  *      "direction"; either asc or desc
  */
 function sortList(option, el) {
+  // sort all elements
+  var sortedElements = sortElements($(el).find(".sl-element:not(.sl-prototype-element)"), option["sortkey"], option["direction"], el);
+  console.log(sortedElements);
+  
+  // remove old elements
+  $(el).find(".sl-element.unsorted").remove();
+
+  // insert new elements
+  $(el).append(sortedElements);
+
   // create array from sortkeys
-  var sortarray = []
+  // Old function:
+  /*var sortarray = []
   $(el).find(".sl-element").each(function(i) {
     $(this).attr("data-index", i);
     sortarray.push({
@@ -261,12 +272,25 @@ function sortList(option, el) {
     /*sortelement["element"]
       .clone()
       .removeClass("unsorted")
-      .appendTo($(el));*/
+      .appendTo($(el));
   });
 
   // remove old temporary elements
-  $(el).find(".sl-element.unsorted").remove();
+  $(el).find(".sl-element.unsorted").remove();*/
 }
+
+
+
+/*  function groupList    
+ *
+ *    Allowed options:
+ *      "groupkey"
+ *      "sortdirection"; either asc or desc
+ */
+function groupList(option, el) {
+
+}
+
 
 
 
@@ -419,6 +443,44 @@ function getDataFromElement(element) {
   });
 
   return obj;
+}
+
+// PRIVATE
+function sortElements(elements, sortkey, direction, el) {
+  // create array from sortkeys
+  var sortarray = []
+  elements.each(function(i) {
+    $(this).attr("data-index", i);
+    sortarray.push({
+      index: i, 
+      value: $(this).find("[data-value='" + sortkey + "']").html(),
+      element: $(this).addClass("unsorted")
+    });
+  });
+
+  // sort array
+  sortarray.sort(function(a, b) {
+    if(typeof a.value == "string") {
+      var aName = a.value.toLowerCase();
+      var bName = b.value.toLowerCase(); 
+      if(direction == "desc") 
+        return ((aName < bName) ? -1 : ((aName > bName) ? 1 : 0));
+      else 
+        return ((aName > bName) ? -1 : ((aName < bName) ? 1 : 0));
+    } // TODO
+  });
+
+  // apply sorting to dom
+  var sortedElements = $("<div class='sortcontainer'></div>");
+  $.each(sortarray, function(i, sortelement) {
+    // recreate element
+    elementdata = jQuery.parseJSON($(sortelement["element"]).attr("data-elementdata"));
+    $(createElementDom(el, elementdata, $(el).find(".sl-prototype-element[data-elementtype='" +  $(sortelement["element"]).attr("data-elementtype") + "']")))
+      .appendTo($(sortedElements));
+  });
+
+  // return sorted elements
+  return sortedElements.find(".sl-element");
 }
 /*function ggetDataFromElement(element) {
   obj = {};
