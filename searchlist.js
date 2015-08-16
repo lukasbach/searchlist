@@ -286,6 +286,8 @@ function sortList(option, el) {
  *    Allowed options:
  *      "groupkey"
  *      "sortdirection"; either asc or desc
+ *      "headerprototype"
+ *      "footerprototype"
  */
 function groupList(option, el) {
   var groups = [];
@@ -295,18 +297,50 @@ function groupList(option, el) {
     // get group name
     var groupname = getValueFromJson($(this).attr("data-elementdata"), option["groupkey"]);
 
-    console.log(groups);
-
     // create group if not yet existing
     if(!(groups.indexOf(groupname) >= 0)) {
       groups.push(groupname);
-      $("<div class='sl-group'></div>")
+      
+      var groupelement = $("<div class='sl-group'></div>")
         .attr("data-groupname", groupname)
         .appendTo($(el));
+
+      // create data for header and footer
+      if("headerprototype" in option || "footerprototype" in option) {
+        var hfdata = {
+          sl: {
+            group: {
+              name: groupname,
+              count: 0
+            }
+          }
+        };
+      }
+
+      // push header
+      if("headerprototype" in option) {
+        createElementDom(el, hfdata, $(el).find(".sl-prototype-element[data-elementtype='" +  option["headerprototype"] + "']"))
+          .addClass("sl-groupheader")
+          .appendTo(groupelement);
+      }
+
+      // push footer
+      if("footerprototype" in option) {
+        createElementDom(el, hfdata, $(el).find(".sl-prototype-element[data-elementtype='" +  option["footerprototype"] + "']"))
+          .addClass("sl-groupfooter")
+          .appendTo(groupelement);
+      }
     }
 
+    // find group element
+    var groupelement = $(el).find(".sl-group[data-groupname='" + groupname + "']");
+
     // push elements into their corresponding groups
-    $(this).appendTo($(el).find(".sl-group[data-groupname='" + groupname + "']"))
+    if("footerprototype" in option) {
+      $(this).insertBefore(groupelement.find(".sl-groupfooter"));
+    } else {
+      $(this).appendTo(groupelement);
+    }
   });
 }
 
