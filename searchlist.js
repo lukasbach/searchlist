@@ -229,15 +229,22 @@ function transformElement(option, el) {
  *      "direction"; either asc or desc
  */
 function sortList(option, el) {
-  // sort all elements
-  var sortedElements = sortElements($(el).find(".sl-element:not(.sl-prototype-element)"), option["sortkey"], option["direction"], el);
-  console.log(sortedElements);
-  
-  // remove old elements
-  $(el).find(".sl-element.unsorted").remove();
+  // if not grouped
+  if(!$(el).hasClass("grouped")) {
+    // sort all elements
+    var sortedElements = sortElements($(el).find(".sl-element:not(.sl-prototype-element)"), option["sortkey"], option["direction"], el);
+    
+    // remove old elements
+    $(el).find(".sl-element.unsorted").remove();
 
-  // insert new elements
-  $(el).append(sortedElements);
+    // insert new elements
+    $(el).append(sortedElements);
+  } else {
+    // if grouped
+    $(el).find(".sl-group").each(function() {
+      sortGroup({group: this, sortkey: option["sortkey"], direction: option["direction"]}, el);
+    });
+  }
 
   // create array from sortkeys
   // Old function:
@@ -281,6 +288,38 @@ function sortList(option, el) {
 
 
 
+/*  function sortGroup    
+ *
+ *    Allowed options:
+ *      "groupname"/"group"
+ *      "sortkey"
+ *      "direction"; either asc or desc
+ */
+function sortGroup(option, el) {
+  // get group
+  if(typeof option["groupname"] !== 'undefined') {
+    // by name
+    var group = $(el).find(".sl-group[data-groupname='" + option["groupname"] + "']");
+  } else if(typeof option["group"] !== 'undefined') {
+    // by element
+    var group = $(option["group"]);
+  } else {
+    console.log("error");
+    // TODO error
+    }
+
+  // sort all elements
+  var sortedElements = sortElements(group.find(".sl-element:not(.sl-prototype-element)"), option["sortkey"], option["direction"], el);
+  
+  // remove old elements
+  group.find(".sl-element.unsorted").remove();
+
+  // insert new elements
+  group.append(sortedElements);
+}
+
+
+
 /*  function groupList    
  *
  *    Allowed options:
@@ -319,14 +358,14 @@ function groupList(option, el) {
 
       // push header
       if("headerprototype" in option) {
-        createElementDom(el, hfdata, $(el).find(".sl-prototype-element[data-elementtype='" +  option["headerprototype"] + "']"))
+        createElementDom(el, hfdata, $(el).find(".sl-prototype-element[data-elementtype='" +  option["headerprototype"] + "']"), false)
           .addClass("sl-groupheader")
           .appendTo(groupelement);
       }
 
       // push footer
       if("footerprototype" in option) {
-        createElementDom(el, hfdata, $(el).find(".sl-prototype-element[data-elementtype='" +  option["footerprototype"] + "']"))
+        createElementDom(el, hfdata, $(el).find(".sl-prototype-element[data-elementtype='" +  option["footerprototype"] + "']"), false)
           .addClass("sl-groupfooter")
           .appendTo(groupelement);
       }
@@ -342,6 +381,9 @@ function groupList(option, el) {
       $(this).appendTo(groupelement);
     }
   });
+
+  // Mark list as grouped
+  $(el).addClass("grouped");
 }
 
 
@@ -356,10 +398,13 @@ function unGroup(option, el) {
     .find(".sl-group .sl-element")
     .appendTo(el);
 
-  // Remove all (now empty) group elements
+  // Remove all (now empty) group elements and headers/footers
   $(el)
-    .find(".sl-group")
+    .find(".sl-group, sl-groupheader, sl-groupfooter")
     .remove();
+
+  // Mark list as ungrouped
+  $(el).removeClass("grouped");
 }
 
 
@@ -408,14 +453,19 @@ function moveDown(option, el) {
 
 
 // PRIVATE
-function createElementDom(el, datael, prototypeelement) {
+function createElementDom(el, datael, prototypeelement, setClass) {
   // clone prototype element to new one
   var $listel = $(prototypeelement)
     .clone()
     .removeClass("sl-prototype-element")
     .removeClass("sl-prototype-transform-element")
-    .addClass("sl-element")
+    //.addClass("sl-element")
     .attr("data-elementdata", JSON.stringify(datael));
+
+  // set class if supposed to do so
+  if(setClass == true || !(typeof setClass !== 'undefined')) {
+    $listel.addClass("sl-element");
+  }
 
   // fill with data content
   $listel
@@ -546,9 +596,11 @@ function sortElements(elements, sortkey, direction, el) {
   $.each(sortarray, function(i, sortelement) {
     // recreate element
     elementdata = jQuery.parseJSON($(sortelement["element"]).attr("data-elementdata"));
-    $(createElementDom(el, elementdata, $(el).find(".sl-prototype-element[data-elementtype='" +  $(sortelement["element"]).attr("data-elementtype") + "']")))
+    $(createElementDom(el, elementdata, $(el).find(".sl-prototype-element[data-elementtype='" +  $(sortelement["element"]).attr("data-elementtype") + "']"), true))
       .appendTo($(sortedElements));
   });
+
+
 
   // return sorted elements
   return sortedElements.find(".sl-element");
