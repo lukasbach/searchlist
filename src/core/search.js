@@ -59,7 +59,8 @@ function search(option, el) {
 
         // fade previously hidden, but now found elements in
         if($(this).hasClass("searchFound") && $(this).hasClass("searchPreviouslyNotFound")) {
-            var autoHeight = $(this).css('height', 'auto').height();
+            var autoHeight = 
+              $(this).css('height', 'auto').outerHeight();
             $(this).height(0).animate({height: autoHeight, opacity: 1}, 500, function() {
               $(this).removeAttr("style");
             });
@@ -67,7 +68,7 @@ function search(option, el) {
 
         // fade previously shown, but now not the search keywords matching elements out
         if($(this).hasClass("searchNotFound") && !$(this).hasClass("searchPreviouslyNotFound")) {
-          $(this).animate({height: 0, opacity: 0}, 500, function() {
+          $(this).animate({height: 0, opacity: 0, "padding-top": 0, "padding-bottom": 0}, 500, function() {
             $(this).removeAttr("style");
             $(this).css("display", "none");
           });
