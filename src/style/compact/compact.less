@@ -1,0 +1,37 @@
+@import "../../../vendor/normalize.less";
+@import "../../../vendor/preboot.less";
+
+@primarycolor: #607D8B;
+@accentcolor: #673AB7;
+
+.sl-style.compact {
+	margin-top: 60px;
+	padding: 0;
+	border: 2px solid lighten(@primarycolor, 10%);
+
+	.row {
+		margin-bottom: 0 !important;
+	}
+
+
+	.sl-element {
+		padding: 1em;
+
+		.transition(background-color .2s ease);
+
+		color: lighten(@primarycolor, 80%);
+
+		&:nth-child(even) {
+			background-color: lighten(@primarycolor, 25%);
+			&:hover {
+				background-color: lighten(@primarycolor, 28%);
+			}
+		}
+		&:nth-child(odd) {
+			background-color: lighten(@primarycolor, 20%);
+			&:hover {
+				background-color: lighten(@primarycolor, 18%);
+			}
+		}
+	}
+}
