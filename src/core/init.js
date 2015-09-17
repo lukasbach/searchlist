@@ -24,19 +24,41 @@ $.fn.searchlist = function (functionname, option) {
  *        for the list {json:{list:{path:[listel,listlel,listel]}}}
  */
 function initialize(option, el) {
-  $.getJSON( option["source"], function( data ) {
+  if(typeof option["source"] == "string") { // source json
+    $.getJSON( option["source"], function( data ) {
 
-    // bring data into context
-    $.each(option["context"].split("."), function(i, contextpath) {
-      data = data[contextpath];
-    });
+      // bring data into context
+      $.each(option["context"].split("."), function(i, contextpath) {
+        data = data[contextpath];
+      });
 
-    // iterate over data, create list elements
-    $.each(data, function(i, datael) {
+      // iterate over data, create list elements
+      $.each(data, function(i, datael) {
 
-      // create one elements dom and put it into the lists dom
-      createElementDom(el, datael, $(el).find(".sl-prototype-element[data-elementtype='default']")).appendTo(el);
+        // create one elements dom and put it into the lists dom
+        createElementDom(el, datael, $(el).find(".sl-prototype-element[data-elementtype='default']")).appendTo(el);
 
-    }); // end data loop
-  }); // end ajax request
+      }); // end data loop
+	
+    }); // end ajax request
+  } // end source json
+  else if(typeof option["source"] == "object") { // source object
+
+      // get data
+      data = option["source"];
+
+      // bring data into context
+      $.each(option["context"].split("."), function(i, contextpath) {
+        data = data[contextpath];
+      });
+
+      // iterate over data, create list elements
+      $.each(data, function(i, datael) {
+
+        // create one elements dom and put it into the lists dom
+        createElementDom(el, datael, $(el).find(".sl-prototype-element[data-elementtype='default']")).appendTo(el);
+
+      }); // end data loop
+
+  } // end source objec
 } // end init function
