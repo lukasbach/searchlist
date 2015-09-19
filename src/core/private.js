@@ -160,6 +160,25 @@ function getValueFromObject(obj, key) {
   return listelValue;
 }
 
+function getObjectFromKey(key, val) {
+  obj = {};
+  objPointer = obj;
+
+  // iterate over object and create sub objects
+  $.each(key.split("."), function(i, valuepath) {
+    if(i < key.split(".").length - 1) {
+      // create new subnode
+      objPointer[valuepath] = {};
+      objPointer = objPointer[valuepath];
+    } else {
+      // save value to final object node
+      objPointer[valuepath] = val;
+    }
+  });
+
+  return obj;
+}
+
 function getValueFromJson(json, key) {
   return getValueFromObject($.parseJSON(json), key);
 }

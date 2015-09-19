@@ -109,3 +109,21 @@ function moveDown(option, el) {
 
   element.insertAfter(element.next(".sl-element:not(.sl-prototype-element)"));
 }
+
+
+
+/*  function addElement    
+ *
+ *    Allowed options:
+ *      "data": The data for the element
+ *      "prototypeelement"
+ */
+function addElement(option, el) {
+  $(el).append(createElementDom(el, option["data"], option["prototypeelement"]));
+}
+
+
+
+
+
+

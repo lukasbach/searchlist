@@ -1,5 +1,9 @@
 $(document).ready(function() {
+  // Initialize display style (required even if not using skins)
   $("<style type='text/css'>.sl-prototype-element, .sl-prototype-transform-element {display: none}</style>").appendTo("head");
+
+  // Initialize external interface forms
+  interfacesInit({});
 });
 
 /*
