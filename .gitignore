@@ -24,3 +24,5 @@ test.php
 test/
 vendor/
 test.php
+.git/
+node_modules/
