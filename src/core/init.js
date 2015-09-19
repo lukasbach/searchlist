@@ -2,6 +2,21 @@ $(document).ready(function() {
   // Initialize display style (required even if not using skins)
   $("<style type='text/css'>.sl-prototype-element, .sl-prototype-transform-element {display: none}</style>").appendTo("head");
 
+  // Initialize default searchlists
+  $(".searchlist").each(function() {
+    var options = {};
+
+    if($(this).is("[data-source")) {
+      options["source"] = $(this).attr("data-source");
+    }
+
+    if($(this).is("[data-context")) {
+      options["context"] = $(this).attr("data-context");
+    }
+
+    $(this).searchlist("initialize", options);
+  });
+
   // Initialize external interface forms
   interfacesInit({});
 });
