@@ -1,385 +1,3 @@
-/*  function groupList    
- *
- *    Allowed options:
- *      "groupkey"
- *      "sortdirection"; either asc or desc
- *      "headerprototype"
- *      "footerprototype"
- */
-function groupList(option, el) {
-  var groups = [];
-
-  // iterate over elements to sort them into their groups
-  $(el).find(".sl-element").each(function(){
-    // get group name
-    var groupname = getValueFromJson($(this).attr("data-elementdata"), option["groupkey"]);
-
-    // create group if not yet existing
-    if(!(groups.indexOf(groupname) >= 0)) {
-      groups.push(groupname);
-      
-      var groupelement = $("<div class='sl-group'></div>")
-        .attr("data-groupname", groupname)
-        .appendTo($(el));
-
-      // create data for header and footer
-      if("headerprototype" in option || "footerprototype" in option) {
-        var hfdata = {
-          sl: {
-            group: {
-              name: groupname,
-              count: 0
-            }
-          }
-        };
-      }
-
-      // push header
-      if("headerprototype" in option) {
-        createElementDom(el, hfdata, $(el).find(".sl-prototype-element[data-elementtype='" +  option["headerprototype"] + "']"), false)
-          .addClass("sl-groupheader")
-          .appendTo(groupelement);
-      }
-
-      // push footer
-      if("footerprototype" in option) {
-        createElementDom(el, hfdata, $(el).find(".sl-prototype-element[data-elementtype='" +  option["footerprototype"] + "']"), false)
-          .addClass("sl-groupfooter")
-          .appendTo(groupelement);
-      }
-    }
-
-    // find group element
-    var groupelement = $(el).find(".sl-group[data-groupname='" + groupname + "']");
-
-    // push elements into their corresponding groups
-    if("footerprototype" in option) {
-      $(this).insertBefore(groupelement.find(".sl-groupfooter"));
-    } else {
-      $(this).appendTo(groupelement);
-    }
-  });
-
-  // Mark list as grouped
-  $(el).addClass("grouped");
-}
-
-
-/*  function unGroup    
- *
- *    Allowed options: none
- */
-function unGroup(option, el) {
-  // replace all list elements in groups back to main element
-  $(el)
-    .find(".sl-group .sl-element")
-    .appendTo(el);
-
-  // Remove all (now empty) group elements and headers/footers
-  $(el)
-    .find(".sl-group, sl-groupheader, sl-groupfooter")
-    .remove();
-
-  // Mark list as ungrouped
-  $(el).removeClass("grouped");
-}
-
-
-/*  function sortGroup    
- *
- *    Allowed options:
- *      "groupname"/"group"
- *      "sortkey"
- *      "direction"; either asc or desc
- */
-function sortGroup(option, el) {
-  // get group
-  if(typeof option["groupname"] !== 'undefined') {
-    // by name
-    var group = $(el).find(".sl-group[data-groupname='" + option["groupname"] + "']");
-  } else if(typeof option["group"] !== 'undefined') {
-    // by element
-    var group = $(option["group"]);
-  } else {
-    console.log("error");
-    // TODO error
-    }
-
-  // sort all elements
-  var sortedElements = sortElements(group.find(".sl-element:not(.sl-prototype-element)"), option["sortkey"], option["direction"], el);
-  
-  // remove old elements
-  group.find(".sl-element.unsorted").remove();
-
-  // insert new elements
-  group.append(sortedElements);
-}$(document).ready(function() {
-  // Initialize display style (required even if not using skins)
-  $("<style type='text/css'>.sl-prototype-element, .sl-prototype-transform-element {display: none}</style>").appendTo("head");
-
-  // Initialize default searchlists
-  $(".searchlist").each(function() {
-    var options = {};
-
-    if($(this).is("[data-source")) {
-      options["source"] = $(this).attr("data-source");
-    }
-
-    if($(this).is("[data-context")) {
-      options["context"] = $(this).attr("data-context");
-    }
-
-    $(this).searchlist("initialize", options);
-  });
-
-  // Initialize external interface forms
-  interfacesInit({});
-});
-
-/*
- * Basic prototype function
- * Runs the function given as first parameter and passes the argument "option"
- * to the specified function
- */
-$.fn.searchlist = function (functionname, option) {
-  return this.each(function() {
-    return window[functionname](option, this);
-  });
-}; // end prototype
-
-
-/*  function initialize    
- *
- *    Allowed options:
- *      "source": Path to the json file that's being used for the list
- *        e.g. "path/to/file.json"
- *      "context": JSON path to the list
- *        e.g. "json.list.path
- *        for the list {json:{list:{path:[listel,listlel,listel]}}}
- */
-function initialize(option, el) {
-  if(typeof option["source"] == "string") { // source json
-    $.getJSON( option["source"], function( data ) {
-
-      // bring data into context
-      $.each(option["context"].split("."), function(i, contextpath) {
-        data = data[contextpath];
-      });
-
-      // iterate over data, create list elements
-      $.each(data, function(i, datael) {
-
-        // create one elements dom and put it into the lists dom
-        createElementDom(el, datael, $(el).find(".sl-prototype-element[data-elementtype='default']")).appendTo(el);
-
-      }); // end data loop
-	
-    }); // end ajax request
-  } // end source json
-  else if(typeof option["source"] == "object") { // source object
-
-      // get data
-      data = option["source"];
-
-      // bring data into context
-      $.each(option["context"].split("."), function(i, contextpath) {
-        data = data[contextpath];
-      });
-
-      // iterate over data, create list elements
-      $.each(data, function(i, datael) {
-
-        // create one elements dom and put it into the lists dom
-        createElementDom(el, datael, $(el).find(".sl-prototype-element[data-elementtype='default']")).appendTo(el);
-
-      }); // end data loop
-
-  } // end source objec
-} // end init function/*  function interfaceAdd    
- *
- *    Allowed options:
- *      "interfaceElement"
- */
-function interfaceAdd(option, el) {
-  // Get elements with values
-  var valueElements = option["interfaceElement"].find("[data-value]");
-
-  // Fill list with values
-  values = {};
-  valueElements.each(function() {
-  	if(!$(this).is("[data-getvalue]") || $(this).attr("data-getvalue") == "html") {
-  		// get value from html
-  		values[$(this).attr("data-value")] = $(this).html();
-  	} else if ($(this).attr("data-getvalue") == "value") {
-  		// get value using jquerys val api
-  		//values[$(this).attr("data-value")] = $(this).val();
-  		//values = $.merge(getObjectFromKey($(this).attr("data-value"), $(this).val()), values);
-  		$.extend(true, values, getObjectFromKey($(this).attr("data-value"), $(this).val()));
-  	} else {
-  		// get value from specified attribute
-  		values[$(this).attr("data-value")] = $(this).attr($(this).attr("data-getvalue"));
-  	}
-  });
-
-  // Append item to list
-  addElement({
-  	data: values,
-  	prototypeelement: $(el).find(".sl-prototype-element[data-elementtype=" + option["interfaceElement"].attr("data-elementtype") + "]")
-  }, el);
-}
-
-
-/*  function interfacesInit    
- *
- */
-function interfacesInit(option) {
-	// get elements
-	if("selector" in option) {
-		var elements = $(option["selector"]);
-	} else if("element" in option) {
-		var elements = option["element"]
-	} else {
-		var elements = $(document);
-	}
-
-	// interfaceAdd
-	elements.find(".sl-add-form [data-event=add-element]").click(function(e) {
-		interfaceAdd(
-			{
-				interfaceElement: $(this).parent(".sl-add-form")
-			}, 
-			$($(this).parent(".sl-add-form").attr("data-searchlist"))
-		);
-	});
-}/*  function injectElement    
- *
- *    Allowed options:
- *      "key": Can be either the key in case the list is an object or the position
- *        number where the element should be inserted; False if the element should
- *        be inserted at the end of the list // TODO
- *        e.g. 3 or "hello" or false
- *      "value": The element thats being inserted; Can be any valid variable, like
- *        String, Integer or Object
- *        e.g. "value" or 3 or true or {do:"something",and:"somethingelse"}
- */
-function injectElement(option, el) {
-  createElementDom(el, option["value"], $(el).find(".sl-prototype-element[data-elementtype='default']")).appendTo(el);
-}
-
-
-
-/*  function removeElement    
- *
- *    Allowed options:
- *      "key": Can be either the key in case the list is an object or the position
- *        number where the element being removed is // TODO
- *        e.g. 3 or "hello"
- *      "element": Alternativly you can hand a element as argument, which will
-          be removed
- */
-function removeElement(option, el) {
-  if("key" in option) {
-    $(el).find(".sl-element:not(.sl-prototype-element):nth-child(" + String( option["key"] + 1 ) + ")").remove();
-  } else if("element" in option) {
-    $(option["element"]).remove();
-  }
-}
-
-
-
-/*  function modifyElement    
- *
- *    Allowed options:
- *      "key": Can be either the key in case the list is an object or the position
- *        number where the element being modified is // TODO
- *        e.g. 3 or "hello"
- *      "element": Alternativly you can hand a element as argument, which will
-          be modified
- *      "data": New data, that will overwrite the old data; Note that missing elements
- *        will use the old data, so not every piece of data must be in this argument
- */
-function modifyElement(option, el) {
-  // get specified element
-  if("key" in option) {
-    var element = $(el).find(".sl-element:not(.sl-prototype-element):nth-child(" + String( option["key"] + 1 ) + ")");
-  } else if("element" in option) {
-    var element = $(option["element"]);
-  }
-
-  // put old and new data intro one array
-  var data = $.extend(true, jQuery.parseJSON(element.attr("data-elementdata")), option["data"]);
-
-  // create new element and insert it
-  createElementDom(
-      el, 
-      data, 
-      $(el).find(".sl-prototype-element[data-elementtype='" + element.attr("data-elementtype") + "']")
-    )
-    .insertAfter(element);
-
-  // remove elemnt with old data
-  element.remove();
-}
-
-
-
-/*  function moveUp    
- *
- *    Allowed options:
- *      "key": Can be either the key in case the list is an object or the position
- *        number where the element being moved is // TODO
- *        e.g. 3 or "hello"
- *      "element": Alternativly you can hand a element as argument, which will
-          be moved
- */
-function moveUp(option, el) {
-  if("key" in option) {
-    element = $(el).find(".sl-element:not(.sl-prototype-element):nth-child(" + String( option["key"] + 1 ) + ")");
-  } else if("element" in option) {
-    element = $(option["element"]);
-  }
-
-  element.insertBefore(element.prev(".sl-element:not(.sl-prototype-element)"));
-}
-
-
-
-/*  function moveDown    
- *
- *    Allowed options:
- *      "key": Can be either the key in case the list is an object or the position
- *        number where the element being moved is // TODO
- *        e.g. 3 or "hello"
- *      "element": Alternativly you can hand a element as argument, which will
-          be moved
- */
-function moveDown(option, el) {
-  if("key" in option) {
-    element = $(el).find(".sl-element:not(.sl-prototype-element):nth-child(" + String( option["key"] + 1 ) + ")");
-  } else if("element" in option) {
-    element = $(option["element"]);
-  }
-
-  element.insertAfter(element.next(".sl-element:not(.sl-prototype-element)"));
-}
-
-
-
-/*  function addElement    
- *
- *    Allowed options:
- *      "data": The data for the element
- *      "prototypeelement"
- */
-function addElement(option, el) {
-  $(el).append(createElementDom(el, option["data"], option["prototypeelement"]));
-}
-
-
-
-
-
-
 function createElementDom(el, datael, prototypeelement, setClass) {
   // clone prototype element to new one
   var $listel = $(prototypeelement)
@@ -563,7 +181,257 @@ function getObjectFromKey(key, val) {
 
 function getValueFromJson(json, key) {
   return getValueFromObject($.parseJSON(json), key);
-}/*  function search    
+}
+
+/*  function groupList    
+ *
+ *    Allowed options:
+ *      "groupkey"
+ *      "sortdirection"; either asc or desc
+ *      "headerprototype"
+ *      "footerprototype"
+ */
+function groupList(option, el) {
+  var groups = [];
+
+  // iterate over elements to sort them into their groups
+  $(el).find(".sl-element").each(function(){
+    // get group name
+    var groupname = getValueFromJson($(this).attr("data-elementdata"), option["groupkey"]);
+
+    // create group if not yet existing
+    if(!(groups.indexOf(groupname) >= 0)) {
+      groups.push(groupname);
+      
+      var groupelement = $("<div class='sl-group'></div>")
+        .attr("data-groupname", groupname)
+        .appendTo($(el));
+
+      // create data for header and footer
+      if("headerprototype" in option || "footerprototype" in option) {
+        var hfdata = {
+          sl: {
+            group: {
+              name: groupname,
+              count: 0
+            }
+          }
+        };
+      }
+
+      // push header
+      if("headerprototype" in option) {
+        createElementDom(el, hfdata, $(el).find(".sl-prototype-element[data-elementtype='" +  option["headerprototype"] + "']"), false)
+          .addClass("sl-groupheader")
+          .appendTo(groupelement);
+      }
+
+      // push footer
+      if("footerprototype" in option) {
+        createElementDom(el, hfdata, $(el).find(".sl-prototype-element[data-elementtype='" +  option["footerprototype"] + "']"), false)
+          .addClass("sl-groupfooter")
+          .appendTo(groupelement);
+      }
+    }
+
+    // find group element
+    var groupelement = $(el).find(".sl-group[data-groupname='" + groupname + "']");
+
+    // push elements into their corresponding groups
+    if("footerprototype" in option) {
+      $(this).insertBefore(groupelement.find(".sl-groupfooter"));
+    } else {
+      $(this).appendTo(groupelement);
+    }
+  });
+
+  // Mark list as grouped
+  $(el).addClass("grouped");
+}
+
+
+/*  function unGroup    
+ *
+ *    Allowed options: none
+ */
+function unGroup(option, el) {
+  // replace all list elements in groups back to main element
+  $(el)
+    .find(".sl-group .sl-element")
+    .appendTo(el);
+
+  // Remove all (now empty) group elements and headers/footers
+  $(el)
+    .find(".sl-group, sl-groupheader, sl-groupfooter")
+    .remove();
+
+  // Mark list as ungrouped
+  $(el).removeClass("grouped");
+}
+
+
+/*  function sortGroup    
+ *
+ *    Allowed options:
+ *      "groupname"/"group"
+ *      "sortkey"
+ *      "direction"; either asc or desc
+ */
+function sortGroup(option, el) {
+  // get group
+  if(typeof option["groupname"] !== 'undefined') {
+    // by name
+    var group = $(el).find(".sl-group[data-groupname='" + option["groupname"] + "']");
+  } else if(typeof option["group"] !== 'undefined') {
+    // by element
+    var group = $(option["group"]);
+  } else {
+    console.log("error");
+    // TODO error
+    }
+
+  // sort all elements
+  var sortedElements = sortElements(group.find(".sl-element:not(.sl-prototype-element)"), option["sortkey"], option["direction"], el);
+  
+  // remove old elements
+  group.find(".sl-element.unsorted").remove();
+
+  // insert new elements
+  group.append(sortedElements);
+}
+
+/*  function injectElement    
+ *
+ *    Allowed options:
+ *      "key": Can be either the key in case the list is an object or the position
+ *        number where the element should be inserted; False if the element should
+ *        be inserted at the end of the list // TODO
+ *        e.g. 3 or "hello" or false
+ *      "value": The element thats being inserted; Can be any valid variable, like
+ *        String, Integer or Object
+ *        e.g. "value" or 3 or true or {do:"something",and:"somethingelse"}
+ */
+function injectElement(option, el) {
+  createElementDom(el, option["value"], $(el).find(".sl-prototype-element[data-elementtype='default']")).appendTo(el);
+}
+
+
+
+/*  function removeElement    
+ *
+ *    Allowed options:
+ *      "key": Can be either the key in case the list is an object or the position
+ *        number where the element being removed is // TODO
+ *        e.g. 3 or "hello"
+ *      "element": Alternativly you can hand a element as argument, which will
+          be removed
+ */
+function removeElement(option, el) {
+  if("key" in option) {
+    $(el).find(".sl-element:not(.sl-prototype-element):nth-child(" + String( option["key"] + 1 ) + ")").remove();
+  } else if("element" in option) {
+    $(option["element"]).remove();
+  }
+}
+
+
+
+/*  function modifyElement    
+ *
+ *    Allowed options:
+ *      "key": Can be either the key in case the list is an object or the position
+ *        number where the element being modified is // TODO
+ *        e.g. 3 or "hello"
+ *      "element": Alternativly you can hand a element as argument, which will
+          be modified
+ *      "data": New data, that will overwrite the old data; Note that missing elements
+ *        will use the old data, so not every piece of data must be in this argument
+ */
+function modifyElement(option, el) {
+  // get specified element
+  if("key" in option) {
+    var element = $(el).find(".sl-element:not(.sl-prototype-element):nth-child(" + String( option["key"] + 1 ) + ")");
+  } else if("element" in option) {
+    var element = $(option["element"]);
+  }
+
+  // put old and new data intro one array
+  var data = $.extend(true, jQuery.parseJSON(element.attr("data-elementdata")), option["data"]);
+
+  // create new element and insert it
+  createElementDom(
+      el, 
+      data, 
+      $(el).find(".sl-prototype-element[data-elementtype='" + element.attr("data-elementtype") + "']")
+    )
+    .insertAfter(element);
+
+  // remove elemnt with old data
+  element.remove();
+}
+
+
+
+/*  function moveUp    
+ *
+ *    Allowed options:
+ *      "key": Can be either the key in case the list is an object or the position
+ *        number where the element being moved is // TODO
+ *        e.g. 3 or "hello"
+ *      "element": Alternativly you can hand a element as argument, which will
+          be moved
+ */
+function moveUp(option, el) {
+  if("key" in option) {
+    element = $(el).find(".sl-element:not(.sl-prototype-element):nth-child(" + String( option["key"] + 1 ) + ")");
+  } else if("element" in option) {
+    element = $(option["element"]);
+  }
+
+  element.insertBefore(element.prev(".sl-element:not(.sl-prototype-element)"));
+}
+
+
+
+/*  function moveDown    
+ *
+ *    Allowed options:
+ *      "key": Can be either the key in case the list is an object or the position
+ *        number where the element being moved is // TODO
+ *        e.g. 3 or "hello"
+ *      "element": Alternativly you can hand a element as argument, which will
+          be moved
+ */
+function moveDown(option, el) {
+  if("key" in option) {
+    element = $(el).find(".sl-element:not(.sl-prototype-element):nth-child(" + String( option["key"] + 1 ) + ")");
+  } else if("element" in option) {
+    element = $(option["element"]);
+  }
+
+  element.insertAfter(element.next(".sl-element:not(.sl-prototype-element)"));
+}
+
+
+
+/*  function addElement    
+ *
+ *    Allowed options:
+ *      "data": The data for the element
+ *      "prototypeelement"
+ */
+function addElement(option, el) {
+  $(el).append(createElementDom(el, option["data"], option["prototypeelement"]));
+}
+
+
+
+
+
+
+
+
+/*  function search    
  *
  *    Allowed options:
  *      "keywords": Keywords, divided by spaces
@@ -655,7 +523,9 @@ function search(option, el) {
       $(el).find(".sl-element.searchNotFound").css("display", "block");
     }
   }
-} // end search function/*  function sortList    
+} // end search function
+
+/*  function sortList    
  *
  *    Allowed options:
  *      "sortkey"
@@ -679,6 +549,8 @@ function sortList(option, el) {
     });
   }
 }
+
+
 /*  function transformElement    
  *
  *    Allowed options:
@@ -692,3 +564,87 @@ function transformElement(option, el) {
   createElementDom(el, elementdata, option["transformPrototype"])
     .insertAfter(previousElement);
 }
+
+$(document).ready(function() {
+  // Initialize display style (required even if not using skins)
+  $("<style type='text/css'>.sl-prototype-element, .sl-prototype-transform-element {display: none}</style>").appendTo("head");
+
+  // Initialize default searchlists
+  $(".searchlist").each(function() {
+    var options = {};
+
+    if($(this).is("[data-source")) {
+      options["source"] = $(this).attr("data-source");
+    }
+
+    if($(this).is("[data-context")) {
+      options["context"] = $(this).attr("data-context");
+    }
+
+    $(this).searchlist("initialize", options);
+  });
+
+  // Initialize external interface forms
+  interfacesInit({});
+});
+
+/*
+ * Basic prototype function
+ * Runs the function given as first parameter and passes the argument "option"
+ * to the specified function
+ */
+$.fn.searchlist = function (functionname, option) {
+  return this.each(function() {
+    return window[functionname](option, this);
+  });
+}; // end prototype
+
+
+/*  function initialize    
+ *
+ *    Allowed options:
+ *      "source": Path to the json file that's being used for the list
+ *        e.g. "path/to/file.json"
+ *      "context": JSON path to the list
+ *        e.g. "json.list.path
+ *        for the list {json:{list:{path:[listel,listlel,listel]}}}
+ */
+function initialize(option, el) {
+  if(typeof option["source"] == "string") { // source json
+    $.getJSON( option["source"], function( data ) {
+
+      // bring data into context
+      $.each(option["context"].split("."), function(i, contextpath) {
+        data = data[contextpath];
+      });
+
+      // iterate over data, create list elements
+      $.each(data, function(i, datael) {
+
+        // create one elements dom and put it into the lists dom
+        createElementDom(el, datael, $(el).find(".sl-prototype-element[data-elementtype='default']")).appendTo(el);
+
+      }); // end data loop
+	
+    }); // end ajax request
+  } // end source json
+  else if(typeof option["source"] == "object") { // source object
+
+      // get data
+      data = option["source"];
+
+      // bring data into context
+      $.each(option["context"].split("."), function(i, contextpath) {
+        data = data[contextpath];
+      });
+
+      // iterate over data, create list elements
+      $.each(data, function(i, datael) {
+
+        // create one elements dom and put it into the lists dom
+        createElementDom(el, datael, $(el).find(".sl-prototype-element[data-elementtype='default']")).appendTo(el);
+
+      }); // end data loop
+
+  } // end source objec
+} // end init function
