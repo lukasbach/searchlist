@@ -9,7 +9,7 @@ module.exports = function(grunt) {
         separator: '\n\n',
       },
       dist: {
-        src: ['src/core/private.js', 'src/core/grouping.js', 'src/core/inteface.js', 
+        src: ['src/core/private.js', 'src/core/grouping.js', 'src/core/interface.js', 
         'src/core/listmanipulation.js', 'src/core/search.js', 'src/core/sorting.js', 
         'src/core/transforming.js', 'src/core/init.js'],
         dest: 'dist/searchlist.js',
